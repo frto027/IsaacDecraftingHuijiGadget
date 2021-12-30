@@ -277,7 +277,7 @@ let recipe_predefine_list = [
     { input: BigInt("0x0303030303030303"), output: 0x76 },
     { input: BigInt("0x0606060606060606"), output: 0x274 },
     { input: BigInt("0x0C0C0C0C0C0C0C0C"), output: 0x157 },
-    { input: BigInt("0x0101010101010101"), output: 0x1e3 },
+    { input: BigInt("0x1111111111111111"), output: 0x1e3 },
     { input: BigInt("0x1616161616161603"), output: 0x28e },
     { input: BigInt("0x0504040404040201"), output: 0x14b },
     { input: BigInt("0x0707010101010101"), output: 0x27f },
