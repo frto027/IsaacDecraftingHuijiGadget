@@ -55,6 +55,30 @@
           </transition-group>
       </div>
       <div class="row" style="margin-bottom:4px;">
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <select class="form-control input-sm" v-model="display_mode">
+            <option value="craftable">显示可合成道具({{craftable_count}})</option>
+            <option value="crafted">显示已合成道具({{crafted_count}})</option>
+          </select>
+        </div>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <select class="form-control input-sm" v-model="craft_count">
+            <option value="1">仅记录一个配方</option>
+            <option value="10">记录10个配方</option>
+            <option value="20">记录20个配方</option>
+            <option value="50">记录50个配方</option>
+            <option value="100">记录100个配方</option>
+          </select>
+        </div>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <select class="form-control input-sm" v-model="real_time_flush">
+            <option value="true">启用实时刷新</option>
+            <option value="false">禁用实时刷新</option>
+          </select>
+        </div>
+      </div>
+              <div class="row" style="margin-bottom:4px;">
+
         <div class="col-xs-8">
           <button class="col-xs-8 btn btn-success" @click="calculate" v-if="worker_status=='idle'">
             开始合成
@@ -65,13 +89,6 @@
           <button class="col-xs-4 btn btn-link" @click="clear_items">
             清空配方
           </button>
-        </div>
-        <div class="col-xs-4">
-          <select class="form-control input-sm" v-model="display_mode">
-            <option value="craftable">显示可合成道具({{craftable_count}})</option>
-            <option value="crafted">显示已合成道具({{crafted_count}})</option>
-          </select>
-
         </div>
 
       </div>
@@ -101,18 +118,29 @@
               style="transform:scale(1.5);image-rendering:pixelated;margin:8px 0"
             ></a>
             <div>
-              <template v-for="(item, index) in result.items" v-bind:key="index">
-                <div
-                  class="decrafting_recipe decrafting_recipe_result"
-                  :class="'decrafting_recipe_' + item"
-                ></div>
-                <br v-if="index == 3"/>
+              <template v-if="result.items.length > 0">
+                <template v-for="(item, index) in result.items[0]" v-bind:key="index">
+                  <div
+                    class="decrafting_recipe decrafting_recipe_result"
+                    :class="'decrafting_recipe_' + item"
+                  ></div>
+                  <br v-if="index == 3"/>
+                </template>
+              </template>
+              <template v-else>
+                <template v-for="index in 8" v-bind:key="index">
+                  <div
+                    class="decrafting_recipe decrafting_recipe_result decrafting_recipe_0"
+                  ></div>
+                  <br v-if="index == 4"/>
+                </template>
               </template>
             </div>
+            <a style="color:var(--detail-wikitable-color)" class="btn btn-link btn-xs" @click="display_items_detail(result.id, result.items)">{{result.items.length}}个配方</a>
             <div style="margin:0;border-radius:0 0 4px 4px" :style="result.crafted ? 'background:var(--brand-primary)': result.craftable ? 'background:gray':'background:black'">
-              <span class="" style="color:white">{{result.id}}</span>
+              <span style="color:white">{{result.id}}</span>
             </div>
-
+            
 
           </div>
         </template>
@@ -124,7 +152,40 @@
           <li>可合成道具：基于配方类型、数量计算而来，理论上可合成的道具。与游戏种子无关，理论最大值为690个道具。</li>
           <li>已合成道具：基于游戏种子、配方类型、数量进行完全穷举而来。本局游戏中，在当前给定的配方限制下，实际可合成的道具。</li>
         </ul>
+        <p>记录多个配方：可以在计算时记录一个以上的配方。记录过多的配方会导致内存占用翻倍，且带来额外用于记录的时间开销。</p>
+        <p>实时刷新：会在计算过程中实时显示配方，但会降低计算速度。在记录多个配方时，性能下降尤为明显。</p>
       </div>
+    </div>
+  </div>
+  <!-- 配方弹窗 -->
+  <div v-if="detail_popup.visible" @click="detail_popup.visible=false" style="background:#FFF0;position:fixed;width:100%;height:100%;top:0px;left:0px;text-align:center;">
+    <div style="text-align:center;width:fit-content;max-width:90%;margin:auto;margin-top:40px;background:var(--detail-sub-bg);padding:10px;border:solid gray 0.5px;border-radius:4px;">
+        <div style="border:solid gray 0px;border-radius:8px;width:fit-content;height:fit-content;margin:4px auto;"><a
+        class="icons collectibles"
+        :id="
+          'collectibles_' +
+          '000'.substr(('' + detail_popup.item_id).length) +
+          detail_popup.item_id
+        "
+        :href="'/wiki/C' + detail_popup.item_id"
+        style="transform:scale(1.5);image-rendering:pixelated;margin:2px 2px"
+      ></a></div>
+
+      <div>
+          <template v-for="(result,index) in detail_popup.results" :key="index">
+            <div style="border:solid gray 0.5px;border-radius:5px;margin:2px;display:inline-block">
+            <template v-for="(item, index2) in result" v-bind:key="index2">
+              <div
+                class="decrafting_recipe decrafting_recipe_result"
+                :class="'decrafting_recipe_' + item"
+              ></div>
+              <br v-if="index2 == 3"/>
+            </template>
+            </div>
+          </template>
+      </div>
+
+      <button class="btn btn-link" @click="detail_popup.visible=false">关闭</button>
     </div>
   </div>
 </template>
@@ -511,6 +572,8 @@ onmessage = function(event){
   
         let watcher_counter = 0
 
+        let craft_count = data.craft_count
+        let real_time_flush = data.real_time_flush
         search_dfs(
             data.candidates,
             data.candidates_limit,
@@ -521,18 +584,36 @@ onmessage = function(event){
               }
               let result = get_result(arr, data.seed, craftable_arr);
               if (items[result] == undefined) {
-                items[result] = [];
+                let marr = []
                 for (let i = 0; i < 8; i++) {
-                  items[result][i] = arr[i];
+                  marr[i] = arr[i];
                 }
+                items[result] = [marr];
+              }else if(items[result].length < craft_count){
+                let marr = []
+                for (let i = 0; i < 8; i++) {
+                  marr[i] = arr[i];
+                }
+                items[result].push(marr)
               }
               if((++watcher_counter) % 1000 == 0){
-                this.postMessage({
+                if(real_time_flush){
+                  this.postMessage({
+                      cmd:"report",
+                      real_time_flush:true,
+                      items:items,
+                      craftable_arr:craftable_arr,
+                      count:watcher_counter
+                  })
+                }else{
+                  this.postMessage({
                     cmd:"report",
-                    items:items,
+                    real_time_flush:false,
                     craftable_arr:craftable_arr,
                     count:watcher_counter
                 })
+
+                }
               }
 
             }
@@ -697,6 +778,13 @@ export default {
       crafted_count:0,
       calculated_count:0,
       worker_status:'idle', /* idle, busy */
+      detail_popup:{
+        visible:false,
+        item_id:3,
+        results:[[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],]
+      },
+      craft_count:1,
+      real_time_flush:"true"
     };
   },
   methods: {
@@ -795,9 +883,23 @@ export default {
         cmd:'start',
         candidates:candidates,
         candidates_limit:candidates_limit,
-        seed:seed
+        seed:seed,
+        craft_count:+this.craft_count,
+        real_time_flush:this.real_time_flush == 'true'
       })
+
+      for(let i=0;i<this.results.length;i++){
+        this.results[i].valid = false
+        this.results[i].crafted = false
+        this.results[i].items = []
+      }
     },
+
+    display_items_detail(id, items){
+      this.detail_popup.visible = true
+      this.detail_popup.item_id = id
+      this.detail_popup.results = items
+    }
   },
 };
 
@@ -810,19 +912,29 @@ webWorker.onmessage = function(event){
       }
       let craftable_count = 0
       let crafted_count = 0
-      for (let i = 1; i < vue_data.results.length; i++) {
-        if (data.items[i]) {
-          vue_data.results[i].valid = true;
+      if(data.cmd == 'result' || data.real_time_flush){
+        for (let i = 1; i < vue_data.results.length; i++) {
+          if (data.items[i]) {
+            vue_data.results[i].valid = true;
+            vue_data.results[i].crafted = true;
+            vue_data.results[i].craftable = true;
+            vue_data.results[i].items = data.items[i];
+            craftable_count++
+            crafted_count++
+          }else{
+            vue_data.results[i].crafted = false;
+            vue_data.results[i].valid = data.craftable_arr[i];
+            vue_data.results[i].craftable = data.craftable_arr[i];
+            vue_data.results[i].items = []
+            if(data.craftable_arr[i])
+              craftable_count++
+          }
+        }
+      }else{
+        for (let i = 1; i < vue_data.results.length; i++) {
           vue_data.results[i].crafted = true;
-          vue_data.results[i].craftable = true;
-          vue_data.results[i].items = data.items[i];
-          craftable_count++
-          crafted_count++
-        }else{
-          vue_data.results[i].crafted = false;
           vue_data.results[i].valid = data.craftable_arr[i];
           vue_data.results[i].craftable = data.craftable_arr[i];
-          vue_data.results[i].items = [0,0,0,0,0,0,0,0]
           if(data.craftable_arr[i])
             craftable_count++
         }
