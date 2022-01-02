@@ -1,7 +1,6 @@
 <template>
   <h1>合成宝袋挖掘器</h1>
   <hr />
-
   <div>
     <div>
       <div style="margin: 1px; text-align: center">
@@ -96,7 +95,7 @@
           </select>
         </div>
         <div class="col-xs-4 col-md-3 col-lg-2">
-          <select class="form-control input-sm" v-model="craft_count">
+          <select class="form-control input-sm" v-model="craft_count" v-bind:disabled="worker_status == 'busy'">
             <option value="1">仅记录一个配方</option>
             <option value="10">记录10个配方</option>
             <option value="20">记录20个配方</option>
@@ -105,7 +104,7 @@
           </select>
         </div>
         <div class="col-xs-4 col-md-3 col-lg-2">
-          <select class="form-control input-sm" v-model="real_time_flush">
+          <select class="form-control input-sm" v-model="real_time_flush" v-bind:disabled="worker_status == 'busy'">
             <option value="true">启用实时刷新</option>
             <option value="false">禁用实时刷新</option>
           </select>
@@ -125,7 +124,7 @@
             v-if="worker_status == 'busy'"
             disabled
           >
-            正在合成(已探索{{ calculated_count }})
+            正在合成({{ calculated_count }}/{{all_calculate_count}})
           </button>
           <button class="col-xs-4 btn btn-link" @click="clear_items">
             清空组件
@@ -653,7 +652,7 @@ function get_result(input_array, gameStartSeed, craftable_arr) {
 
     let selected;
     // let output = []
-    for (; ;) {
+    //for (; ;) {
         currentSeed = RNG_Next(currentSeed, 6);
         //use float instead!!!
         let remains = Number(currentSeed) * 2.3283062e-10 * all_weight;
@@ -674,7 +673,7 @@ function get_result(input_array, gameStartSeed, craftable_arr) {
 
         //默认全解锁
         return selected;
-    }
+    //}
 }
 
 function search_dfs(
@@ -721,6 +720,15 @@ onmessage = function(event){
 
         let craft_count = data.craft_count
         let real_time_flush = data.real_time_flush
+
+        let all_count = 0
+        search_dfs(
+            data.candidates,
+            data.candidates_limit,
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            (arr)=>{all_count++}
+          )
+
         search_dfs(
             data.candidates,
             data.candidates_limit,
@@ -750,14 +758,16 @@ onmessage = function(event){
                       real_time_flush:true,
                       items:items,
                       craftable_arr:craftable_arr,
-                      count:watcher_counter
+                      count:watcher_counter,
+                      all_count:all_count,
                   })
                 }else{
                   this.postMessage({
                     cmd:"report",
                     real_time_flush:false,
-                    craftable_arr:craftable_arr,
-                    count:watcher_counter
+                    /*craftable_arr:craftable_arr,*/
+                    count:watcher_counter,
+                    all_count:all_count,
                 })
 
                 }
@@ -769,7 +779,8 @@ onmessage = function(event){
             cmd:"result",
             items:items,
             craftable_arr:craftable_arr,
-            count:watcher_counter
+            count:watcher_counter,
+            all_count:all_count,
         })
     }
 }
@@ -930,6 +941,7 @@ export default {
       craftable_count: 0,
       crafted_count: 0,
       calculated_count: 0,
+      all_calculate_count: 0,
       worker_status: "idle" /* idle, busy */,
       craft_count: 1,
       real_time_flush: "true",
@@ -1075,6 +1087,8 @@ export default {
         this.results[i].items = [];
         this.results[i].fold = true;
       }
+      this.all_calculate_count = 0;
+      this.calculated_count = 0;
     },
   },
 };
@@ -1106,16 +1120,17 @@ webWorker.onmessage = function (event) {
         }
       }
     } else {
-      for (let i = 1; i < vue_data.results.length; i++) {
+      /*for (let i = 1; i < vue_data.results.length; i++) {
         vue_data.results[i].crafted = true;
         vue_data.results[i].valid = data.craftable_arr[i];
         vue_data.results[i].craftable = data.craftable_arr[i];
         if (data.craftable_arr[i]) craftable_count++;
-      }
+      }*/
     }
     vue_data.craftable_count = craftable_count;
     vue_data.crafted_count = crafted_count;
     vue_data.calculated_count = data.count;
+    vue_data.all_calculate_count = data.all_count
   }
 };
 </script>
