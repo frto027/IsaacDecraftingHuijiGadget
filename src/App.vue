@@ -68,6 +68,7 @@
                   :class="'decrafting_recipe decrafting_recipe_' + item.id"
                   @click="(item.count = item.count > 0 ? 0 : 8), resort()"
                   style="cursor: pointer"
+                  :title="recipe_name[item.id]"
                 ></div>
                 <div>
                   <select
@@ -127,7 +128,7 @@
             正在合成(已探索{{ calculated_count }})
           </button>
           <button class="col-xs-4 btn btn-link" @click="clear_items">
-            清空配方
+            清空组件
           </button>
         </div>
       </div>
@@ -191,6 +192,7 @@
                     <div
                       class="decrafting_recipe decrafting_recipe_result"
                       :class="'decrafting_recipe_' + item"
+                      :title="recipe_name[item]"
                     ></div>
                     <br v-if="index == 3" />
                   </template>
@@ -279,6 +281,7 @@
                         <div
                           class="decrafting_recipe decrafting_recipe_result"
                           :class="'decrafting_recipe_' + item"
+                          :title="recipe_name[item]"
                         ></div>
                         <br v-if="index == 3" />
                       </template>
@@ -310,17 +313,17 @@
       </div>
       <div class="row post-reading dash-line">
         <p>
-          配方候选列表按照从左到右、从上到下的优先级进行探索，可拖拽排序以调整优先级。
+          组件候选列表按照从左到右、从上到下的优先级进行探索，可拖拽排序以调整优先级。
         </p>
         <p>
-          此算法对解空间进行完全穷举，过多的配方会增加计算时间，可能会导致网页未响应，请按需选择。
+          此算法对解空间进行完全穷举，过多的组件会增加计算时间，可能会导致网页未响应，请按需选择。
         </p>
         <ul>
           <li>
-            可合成道具：基于配方类型、数量计算而来，理论上可合成的道具。与游戏种子无关，理论最大值为690个道具。
+            可合成道具：基于组件类型、数量计算而来，理论上可合成的道具。与游戏种子无关，理论最大值为690个道具。
           </li>
           <li>
-            已合成道具：基于游戏种子、配方类型、数量进行完全穷举而来。本局游戏中，在当前给定的配方限制下，实际可合成的道具。
+            已合成道具：基于游戏种子、组件类型、数量进行完全穷举而来。本局游戏中，在当前给定的配方限制下，实际可合成的道具。
           </li>
         </ul>
         <p>
@@ -930,6 +933,39 @@ export default {
       worker_status: "idle" /* idle, busy */,
       craft_count: 1,
       real_time_flush: "true",
+      recipe_name:{
+        0:"空槽位",
+        1:"红心",
+        2:"魂心（魂心/半魂心）",
+        3:"黑心",
+        4:"永恒之心",
+        5:"金心",
+        6:"骨心",
+        7:"腐心",
+        8:"硬币",
+        9:"镍币/黏性镍币",
+        10:"铸币",
+        11:"幸运硬币",
+        12:"钥匙",
+        13:"金钥匙",
+        14:"充能钥匙",
+        15:"炸弹",
+        16:"金炸弹",
+        17:"巨型炸弹",
+        18:"微型电池",
+        19:"小电池",
+        20:"超级电池",
+        21:"卡牌/紧急联络",
+        22:"药丸",
+        23:"符文/灵魂石",
+        24:"骰子碎片",
+        25:"碎裂的钥匙",
+        26:"金硬币",
+        27:"金药丸",
+        28:"金电池",
+        29:"屎块",
+        30:"其它",
+      }
     };
   },
   methods: {
@@ -1088,9 +1124,9 @@ webWorker.onmessage = function (event) {
   transition: transform 0.2s ease;
 }
 
-.flip-item-list-move {
-  transition: transform 0.5s ease;
-}
+/* .flip-item-list-move {
+  transition: transform 0.1s ease;
+} */
 
 .decrafting_recipe {
   image-rendering: pixelated;
