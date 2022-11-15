@@ -53,6 +53,6 @@ python gen_item_data.py
 
 问题不大。
 
-折腾出来的东西，暂时感觉没必要花时间做优雅，辛辛苦苦写好几天的编译脚本，就为了替自己复制粘贴一下，别人还看不懂，没必要。
+折腾出来的东西，暂时感觉没必要花时间做优雅，写编译脚本可以更优雅，但确实有些复杂，就为了替自己复制粘贴一下，读的人还要花更多时间，没必要。
 ## Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
