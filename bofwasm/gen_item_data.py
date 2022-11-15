@@ -115,7 +115,7 @@ assert items_metadata.tag == 'items'
 
 for item in items_metadata:
     if item.tag == 'item' :
-        item_configs[item.attrib['id']]["quality"]= item.attrib['quality']
+        item_configs[item.attrib['id']]["quality"]= item.attrib['craftquality'] if 'craftquality' in item.attrib else item.attrib['quality']
 
 output += "struct ItemConfigData item_config_datas[] = {\n"
 
