@@ -40,7 +40,7 @@ wasm的品质信息是单独生成的，编译在二进制代码里面。
 - `boswasm/gen_item_data.py`中的三个xml文件位置（提前解包好游戏）
 
 ```
-cd boswasm
+cd bofwasm
 python gen_item_data.py
 ./build_em++.bat
 ```
