@@ -57,10 +57,69 @@ public:
     }
 
     inline float nextFloat() {
-        return 2.3283062e-10 * nextInt();
+        return 2.3283062e-10f * nextInt();
     }
 };
 
+
+int safe_is_daily_run = 0;
+int safe_is_greed = 0;
+int safe_challenge_id = 0;
+int safe_current_stage = 1;
+int safe_has_keeper = 0;
+int safe_has_lost = 0;
+int safe_has_tlost = 0;
+int safe_game_start_seed = 0;
+int safe_has_c691 = 0;
+int safe_has_t88 = 0;
+
+
+int IsSafeToGenerageA(ItemConfigData*config, int item_id){
+    int tags = config->tags;
+    if(safe_challenge_id && (tags & TAG_NOCHALLENGE))
+        return 0;
+    if(safe_is_daily_run && (tags & TAG_NODAILY))
+        return 0;
+    if(safe_is_greed && (tags & TAG_NOGREED))
+        return 0;
+    if(safe_has_lost && (tags & TAG_NOLOSTBR))
+        return 0;
+    return 1;
+}
+int IsSafeToGenerageB(ItemConfigData*config, int item_id){
+    int tags = config->tags;
+    if((!safe_is_greed) && safe_current_stage >= 7 && item_id == 697)
+        return 0;
+    if(safe_has_keeper && (tags & TAG_NOKEEPER))
+        return 0;
+    if(safe_has_tlost){
+        if(!(tags & TAG_OFFENSIVE))
+            return 0;
+        if(config->quality < 2){
+            //do something...
+            RNG rng;
+            rng.setSeed(safe_game_start_seed + item_id);
+            rng.setOffset(18);
+            if(rng.nextInt() % 5 == 0){
+                return 0;
+            }
+        }
+    }
+    if(safe_has_c691){
+        if(config->quality < 2)
+            return 0;
+        RNG rng;
+        rng.setSeed(safe_game_start_seed + item_id);
+        rng.setOffset(19);
+
+        if(rng.nextInt() % 3 == 0){
+            return 0;
+        }
+    }
+    if(safe_has_t88 && config->is_active)
+        return 0;
+    return 1;
+}
 
 #define uint64 unsigned long long
 #define ASSERT(x) do{}while(0)
@@ -114,6 +173,8 @@ int AchievementUnlocked(int aid){
 }
 
 int calc(unsigned int seed, unsigned char recipes[8]){
+    safe_game_start_seed = seed;
+
     uint64 sorted_items = bucket_sort_list_toint64(recipes);
     for(int i=0;i<sizeof(predefined_recipes)/sizeof(*predefined_recipes);i++){
         if(sorted_items == predefined_recipes[i].input)
@@ -234,7 +295,7 @@ int calc(unsigned int seed, unsigned char recipes[8]){
         auto item_pools = GetItemPoolData(witem.id);
         for(int item_pool_i = 0;item_pool_i < item_pools.length;item_pool_i++){
             auto item_config = GetItemConfig(item_pools.datas[item_pool_i].id);
-            if(item_config->quality >= qmin && item_config->quality <= qmax){
+            if(IsSafeToGenerageA(item_config, item_pools.datas[item_pool_i].id) && item_config->quality >= qmin && item_config->quality <= qmax){
                 float item_weight = item_pools.datas[item_pool_i].weight * witem.weight;
                 all_weight += item_weight;
                 collectible_list[item_pools.datas[item_pool_i].id] += item_weight;
@@ -255,7 +316,8 @@ int calc(unsigned int seed, unsigned char recipes[8]){
                 remains -= collectible_list[cur_select];
             }
         }
-        if(AchievementUnlocked(GetItemConfig(selected)->aid) || ++retry_count >= 20){
+        ItemConfigData * item_config = GetItemConfig(selected);
+        if((IsSafeToGenerageB(item_config, selected) && AchievementUnlocked(item_config->aid)) || ++retry_count >= 20){
             return selected;
         } 
     }
@@ -272,6 +334,30 @@ extern "C"{
     int getResult(unsigned int seed){
         return calc(seed,buff);
     }
+
+    EMSCRIPTEN_KEEPALIVE
+    void setSafeArg(
+        int a_safe_is_daily_run,
+        int a_safe_is_greed,
+        int a_safe_challenge_id,
+        int a_safe_current_stage,
+        int a_safe_has_keeper,
+        int a_safe_has_lost,
+        int a_safe_has_tlost,
+        int a_safe_has_c691,
+        int a_safe_has_t88
+    ){
+        safe_is_daily_run = a_safe_is_daily_run;
+        safe_is_greed = a_safe_is_greed;
+        safe_challenge_id = a_safe_challenge_id;
+        safe_current_stage = a_safe_current_stage;
+        safe_has_keeper = a_safe_has_keeper;
+        safe_has_lost = a_safe_has_lost;
+        safe_has_tlost = a_safe_has_tlost;
+        safe_has_c691 = a_safe_has_c691;
+        safe_has_t88 = a_safe_has_t88;
+    }
+
 }
 #endif
 

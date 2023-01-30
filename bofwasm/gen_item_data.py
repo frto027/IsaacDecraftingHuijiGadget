@@ -40,10 +40,27 @@ struct ItemPoolData{
 };
 
 struct ItemConfigData{
-    int aid,quality;
+    int aid,quality,is_active,tags;
 };
+
+#define TAG_LAZARUSSHARED       (1<<1)
+#define TAG_NODAILY             (1<<2)
+#define TAG_OFFENSIVE           (1<<3)
+#define TAG_NOLOSTBR            (1<<4)
+#define TAG_NOKEEPER            (1<<5)
+#define TAG_NOGREED             (1<<6)
+#define TAG_NOCHALLENGE         (1<<7)
 """
 
+tag_map = {
+    "lazarusshared":"TAG_LAZARUSSHARED",
+    "nodaily":"TAG_NODAILY",
+    "offensive":"TAG_OFFENSIVE",
+    "nolostbr":"TAG_NOLOSTBR",
+    "nokeeper":"TAG_NOKEEPER",
+    "nogreed":"TAG_NOGREED",
+    "nochallenge":"TAG_NOCHALLENGE",
+}
 
 output_item_pool_datas = "ItemPoolDataItem item_pool_datas[] = {\n"
 
@@ -96,7 +113,7 @@ ItemPoolData GetItemPoolData(int item_pool_id){
 item_configs = {}
 
 for i in range(734):
-    item_configs[str(i)] = {"aid":'-1',"quality":-1}
+    item_configs[str(i)] = {"aid":'-1',"quality":-1,"is_active":'0',"tags":'0'}
 
 with open(items, 'rb') as f:
     items = f.read().decode('utf8')
@@ -106,6 +123,8 @@ for item in items:
     if item.tag in ['passive', 'familiar','active']:
         if 'achievement' in item.attrib:
             item_configs[item.attrib['id']]["aid"] =item.attrib['achievement']
+        if item.tag == 'active':
+            item_configs[item.attrib['id']]["is_active"] = '1'
 
 
 with open(items_metadata, 'rb') as f:
@@ -116,11 +135,17 @@ assert items_metadata.tag == 'items'
 for item in items_metadata:
     if item.tag == 'item' :
         item_configs[item.attrib['id']]["quality"]= item.attrib['craftquality'] if 'craftquality' in item.attrib else item.attrib['quality']
+        tag=[]
+        for t in item.attrib['tags'].split(' '):
+            if t in tag_map:
+                tag.append(tag_map[t])
+        if len(tag) > 0:
+            item_configs[item.attrib['id']]["tags"] = '(' + '|'.join(tag) + ')'
 
 output += "struct ItemConfigData item_config_datas[] = {\n"
 
 for i in range(len(item_configs)):
-    output += "    {%s,%s},\n" % (item_configs[str(i)]['aid'],item_configs[str(i)]['quality'])
+    output += "    {%s,%s,%s,%s},\n" % (item_configs[str(i)]['aid'],item_configs[str(i)]['quality'],item_configs[str(i)]['is_active'],item_configs[str(i)]['tags'])
 output += "};\n"
 
 output += """
