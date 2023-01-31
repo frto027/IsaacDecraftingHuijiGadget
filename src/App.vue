@@ -85,47 +85,60 @@
           </template>
         </transition-group>
       </div>
-      <div class="row" style="margin-bottom: 4px">
-        <div class="col-xs-4 col-md-3 col-lg-2">
-          <select class="form-control input-sm" v-model="display_mode">
-            <option value="craftable">
-              显示可合成道具({{ craftable_count }})
-            </option>
-            <option value="crafted">显示已合成道具({{ crafted_count }})</option>
-          </select>
-        </div>
-        <div class="col-xs-4 col-md-3 col-lg-2">
-          <select class="form-control input-sm" v-model="craft_count" v-bind:disabled="worker_status == 'busy'">
-            <option value="1">仅记录一个配方</option>
-            <option value="10">记录10个配方</option>
-            <option value="20">记录20个配方</option>
-            <option value="50">记录50个配方</option>
-            <option value="100">记录100个配方</option>
-          </select>
-        </div>
-        <div class="col-xs-4 col-md-3 col-lg-2">
-          <select class="form-control input-sm" v-model="real_time_flush" v-bind:disabled="worker_status == 'busy'">
-            <option value="true">启用实时刷新</option>
-            <option value="false">禁用实时刷新</option>
-          </select>
-        </div>
-        <div class="col-xs-4 col-md-3 col-lg-2">
-          <select class="form-control input-sm" v-model="enable_wasm" v-bind:disabled="worker_status == 'busy' || no_wasm">
-            <option value="true">启用wasm加速</option>
-            <option value="false">禁用wasm加速</option>
-          </select>
-        </div>
+      <div style="margin-bottom: 4px">
+        <span>
+            <div class="btn-group" style="margin:6px 6px">
+              <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(display_mode='craftable'))" :class="display_mode=='craftable'? 'btn-success' : 'btn-default'" class="btn btn-xs">可合成({{ craftable_count }})</div>
+              <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(display_mode='crafted'))" :class="display_mode=='crafted'? 'btn-success' : 'btn-default'" class="btn btn-xs">已合成({{ crafted_count }})</div>
+            </div>
+        </span>
+        <span>
+            <div class="btn-group" style="margin:6px 6px">
+              <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'|| (craft_count=1))" :class="craft_count==1? 'btn-success' : 'btn-default'" class="btn btn-xs">1配方</div>
+              <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'|| (craft_count=10))" :class="craft_count==10? 'btn-success' : 'btn-default'" class="btn btn-xs">10配方</div>
+              <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'|| (craft_count=20))" :class="craft_count==20? 'btn-success' : 'btn-default'" class="btn btn-xs">20配方</div>
+              <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'|| (craft_count=50))" :class="craft_count==50? 'btn-success' : 'btn-default'" class="btn btn-xs">50配方</div>
+              <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'|| (craft_count=100))" :class="craft_count==100? 'btn-success' : 'btn-default'" class="btn btn-xs">100配方</div>
+            </div>
+        </span>
 
+
+        <span>
+            <div class="btn-group" style="margin:6px 6px">
+              <div type="button" @click="(worker_status=='busy'|| (real_time_flush='true'))" :class="real_time_flush=='true'? 'btn-success' : 'btn-default'" class="btn btn-xs" v-bind:disabled="worker_status=='busy'||undefined">启用实时刷新</div>
+              <div type="button" @click="(worker_status=='busy'|| (real_time_flush='false'))" :class="real_time_flush!='true'? 'btn-success' : 'btn-default'" class="btn btn-xs" v-bind:disabled="worker_status=='busy'||undefined">关闭实时刷新</div>
+            </div>
+        </span>
+        <span>
+            <div class="btn-group" style="margin:6px 6px">
+              <div type="button" @click="(worker_status=='busy'|| no_wasm) || (enable_wasm='true')" :class="enable_wasm=='true'? 'btn-success' : 'btn-default'" class="btn btn-xs" v-bind:disabled="(worker_status=='busy'|| no_wasm) || undefined">启用wasm加速</div>
+              <div type="button" @click="(worker_status=='busy'|| no_wasm) || (enable_wasm='false')" :class="enable_wasm!='true'? 'btn-success' : 'btn-default'" class="btn btn-xs" v-bind:disabled="(worker_status=='busy'|| no_wasm) || undefined">禁用wasm加速</div>
+            </div>
+        </span>
       </div>
-      <div class="btn-group" style="margin:6px 0px">
-        <div type="button" @click="safe_is_greed=!safe_is_greed" :class="safe_is_greed? 'btn-success' : 'btn-default'" id="crafting_item_greed" class="btn btn-xs">贪婪模式</div>
-        <div type="button" @click="safe_is_daily_run=!safe_is_daily_run" :class="safe_is_daily_run? 'btn-success' : 'btn-default'" id="crafting_item_daily_run" class="btn btn-xs">每日挑战</div>
-        <div type="button" @click="safe_current_stage=safe_current_stage>=7?1:7" :class="safe_current_stage >= 7? 'btn-success' : 'btn-default'" id="crafting_item_stage_more_7" class="btn btn-xs">7层及以上</div>
-        <div type="button" @click="safe_has_tlost=!safe_has_tlost" :class="safe_has_tlost? 'btn-success' : 'btn-default'" id="crafting_item_tlost" class="btn btn-xs">堕化游魂</div>
-        <div type="button" @click="safe_has_keeper=!safe_has_keeper" :class="safe_has_keeper? 'btn-success' : 'btn-default'" id="crafting_item_keeper" class="btn btn-xs">（堕化）店主</div>
-        <div type="button" @click="safe_has_lost=!safe_has_lost" :class="safe_has_lost? 'btn-success' : 'btn-default'" id="crafting_item_lost" class="btn btn-xs">游魂</div>
-        <div type="button" @click="safe_has_c691=!safe_has_c691" :class="safe_has_c691? 'btn-success' : 'btn-default'" id="crafting_item_c691" class="btn btn-xs">道具：十字圣球</div>
-        <div type="button" @click="safe_has_t88=!safe_has_t88" :class="safe_has_t88? 'btn-success' : 'btn-default'" id="crafting_item_t88" class="btn btn-xs">饰品：不！</div>
+      <div style="margin-bottom: 4px">
+
+        <span>
+          <div class="btn-group" style="margin:6px 6px">
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_is_greed=!safe_is_greed))" :class="safe_is_greed? 'btn-success' : 'btn-default'" id="crafting_item_greed" class="btn btn-xs">贪婪模式</div>
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_is_daily_run=!safe_is_daily_run))" :class="safe_is_daily_run? 'btn-success' : 'btn-default'" id="crafting_item_daily_run" class="btn btn-xs">每日挑战</div>
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_current_stage=safe_current_stage>=7?1:7))" :class="safe_current_stage >= 7? 'btn-success' : 'btn-default'" id="crafting_item_stage_more_7" class="btn btn-xs">7层及以上</div>
+          </div>
+        </span>
+        <span>
+          <div class="btn-group" style="margin:6px 6px">
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_has_tlost=!safe_has_tlost))" :class="safe_has_tlost? 'btn-success' : 'btn-default'" id="crafting_item_tlost" class="btn btn-xs">堕化游魂</div>
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_has_keeper=!safe_has_keeper))" :class="safe_has_keeper? 'btn-success' : 'btn-default'" id="crafting_item_keeper" class="btn btn-xs">（堕化）店主</div>
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_has_lost=!safe_has_lost))" :class="safe_has_lost? 'btn-success' : 'btn-default'" id="crafting_item_lost" class="btn btn-xs">游魂</div>
+          </div>
+
+        </span>
+        <span>
+          <div class="btn-group" style="margin:6px 6px">
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_has_c691=!safe_has_c691))" :class="safe_has_c691? 'btn-success' : 'btn-default'" id="crafting_item_c691" class="btn btn-xs">道具：十字圣球</div>
+            <div type="button" v-bind:disabled="worker_status=='busy'||undefined" @click="(worker_status=='busy'||(safe_has_t88=!safe_has_t88))" :class="safe_has_t88? 'btn-success' : 'btn-default'" id="crafting_item_t88" class="btn btn-xs">饰品：不！</div>
+          </div>
+        </span>
       </div>
 
       <div class="row" style="margin-bottom: 4px">
