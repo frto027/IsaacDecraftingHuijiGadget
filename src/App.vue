@@ -858,6 +858,20 @@ onmessage = function(event){
         let wasm = data.enable_wasm && BagOfCraftingWasmHelper
         let base_div = wasm ? 100000 : 1000
         let all_count = 0
+
+        if(wasm){
+          BagOfCraftingWasmHelper.setSafeArg(
+            safe_is_daily_run,
+            safe_is_greed,
+            safe_challenge_id,
+            safe_current_stage,
+            safe_has_keeper,
+            safe_has_lost,
+            safe_has_tlost,
+            safe_has_c691,
+            safe_has_t88
+          );
+
         search_dfs(
             data.candidates,
             data.candidates_limit,
@@ -874,18 +888,6 @@ onmessage = function(event){
               //   console.log("ERROR!");
               // }
               let result
-              if(wasm){
-                BagOfCraftingWasmHelper.setSafeArg(
-                  safe_is_daily_run,
-                  safe_is_greed,
-                  safe_challenge_id,
-                  safe_current_stage,
-                  safe_has_keeper,
-                  safe_has_lost,
-                  safe_has_tlost,
-                  safe_has_c691,
-                  safe_has_t88
-                );
                 result = BagOfCraftingWasmHelper.calc(data.seed, arr);
               }else{
                 result = get_result(arr, data.seed, craftable_arr);
