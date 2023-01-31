@@ -538,7 +538,7 @@ function GetItemConfig(item_id) {
 
 let safe_is_daily_run = false
 let safe_is_greed = false
-let safe_challenge_id = undefined
+let safe_challenge_id = false /* 懒得换了，界面上是个开关，那就boolean吧 */
 let safe_current_stage = 1
 let safe_has_keeper = false //id:14 or 33
 let safe_has_lost = false // id:10 only
@@ -551,7 +551,7 @@ function IsSafeToGenerage(item_config, flag){
     //assert flag == 6 || flag == 1
     if((flag & 1) != 0){
         /* if(safe_challenge_id == 29) not support */
-        if(safe_challenge_id != undefined && item_config["nochallenge"])
+        if(safe_challenge_id && item_config["nochallenge"])
             return false;
         if(safe_is_daily_run && item_config["nodaily"])
             return false;
@@ -840,7 +840,6 @@ onmessage = function(event){
         safe_has_keeper = data.safe_has_keeper
         safe_has_lost = data.safe_has_lost
         safe_has_tlost = data.safe_has_tlost
-        safe_game_start_seed = data.safe_game_start_seed
         safe_has_c691 = data.safe_has_c691
         safe_has_t88 = data.safe_has_t88
 
@@ -871,6 +870,7 @@ onmessage = function(event){
             safe_has_c691,
             safe_has_t88
           );
+        }
 
         search_dfs(
             data.candidates,
@@ -878,6 +878,13 @@ onmessage = function(event){
             [0, 0, 0, 0, 0, 0, 0, 0],
             (arr)=>{all_count++}
           )
+
+        function do_recheck(arr,item_id){
+          let js_result = get_result(arr,data.seed)
+          if(js_result != item_id){
+            console.log("inconsist:" + arr + " " + item_id + "->js " + js_result)
+          }
+        }
 
         search_dfs(
             data.candidates,
@@ -888,6 +895,7 @@ onmessage = function(event){
               //   console.log("ERROR!");
               // }
               let result
+              if(wasm){
                 result = BagOfCraftingWasmHelper.calc(data.seed, arr);
               }else{
                 result = get_result(arr, data.seed, craftable_arr);
@@ -898,12 +906,14 @@ onmessage = function(event){
                   marr[i] = arr[i];
                 }
                 items[result] = [marr];
+                //do_recheck(marr,result);
               }else if(items[result].length < craft_count){
                 let marr = []
                 for (let i = 0; i < 8; i++) {
                   marr[i] = arr[i];
                 }
                 items[result].push(marr)
+                //do_recheck(marr,result);
               }
               if((++watcher_counter) % base_div == 0){
                 if(real_time_flush){
@@ -1141,7 +1151,6 @@ export default {
       safe_has_keeper: false,
       safe_has_lost: false,
       safe_has_tlost: false,
-      safe_game_start_seed: false,
       safe_has_c691: false,
       safe_has_t88: false,
     };
@@ -1254,7 +1263,6 @@ export default {
         safe_has_keeper: this.safe_has_keeper,
         safe_has_lost: this.safe_has_lost,
         safe_has_tlost: this.safe_has_tlost,
-        safe_game_start_seed: this.safe_game_start_seed,
         safe_has_c691: this.safe_has_c691,
         safe_has_t88: this.safe_has_t88,
       });
