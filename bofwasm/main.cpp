@@ -82,8 +82,6 @@ int IsSafeToGenerageA(ItemConfigData*config, int item_id){
         return 0;
     if(safe_is_greed && (tags & TAG_NOGREED))
         return 0;
-    if(safe_has_lost && (tags & TAG_NOLOSTBR))
-        return 0;
     return 1;
 }
 int IsSafeToGenerageB(ItemConfigData*config, int item_id){
@@ -92,6 +90,8 @@ int IsSafeToGenerageB(ItemConfigData*config, int item_id){
         return 0;
     if(safe_has_keeper && (tags & TAG_NOKEEPER))
         return 0;
+    if(safe_has_lost && (tags & TAG_NOLOSTBR))
+        return 0;
     if(safe_has_tlost){
         if(!(tags & TAG_OFFENSIVE))
             return 0;
@@ -99,7 +99,7 @@ int IsSafeToGenerageB(ItemConfigData*config, int item_id){
             //do something...
             RNG rng;
             rng.setSeed(safe_game_start_seed + item_id);
-            rng.setOffset(18);
+            rng.setOffset(17);
             if(rng.nextInt() % 5 == 0){
                 return 0;
             }
@@ -108,15 +108,17 @@ int IsSafeToGenerageB(ItemConfigData*config, int item_id){
     if(safe_has_c691){
         if(config->quality < 2)
             return 0;
-        RNG rng;
-        rng.setSeed(safe_game_start_seed + item_id);
-        rng.setOffset(19);
+        if(config->quality == 2){
+            RNG rng;
+            rng.setSeed(safe_game_start_seed + item_id);
+            rng.setOffset(18);
 
-        if(rng.nextInt() % 3 == 0){
-            return 0;
+            if(rng.nextInt() % 3 == 0){
+                return 0;
+            }
         }
     }
-    if(safe_has_t88 && config->is_active)
+    if(safe_has_t88 && config->quality == 0)
         return 0;
     return 1;
 }
