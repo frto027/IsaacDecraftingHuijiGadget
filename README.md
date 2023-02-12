@@ -36,7 +36,7 @@ wasm的品质信息是单独生成的，编译在二进制代码里面。
 # wasm的编译
 
 修改以下路径：
-- `boswasm/build_em++.bat`中的`D:\emsdk\emsdk_env.bat`，需要自行下载wmsdk
+- `boswasm/build_em++.bat`中的`D:\emsdk\emsdk_env.bat`，需要自行下载emsdk
 - `boswasm/gen_item_data.py`中的三个xml文件位置（提前解包好游戏）
 
 ```
